@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Grade Submission - {{ submission.student.username }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'course_detail' submission.assignment.course.id %}">{{ submission.assignment.course.title }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'assignment_detail' submission.assignment.id %}">{{ submission.assignment.title }}</a></li>
+            <li class="breadcrumb-item active">Grade: {{ submission.student.username }}</li>
+        </ol>
+    </nav>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Grade Submission</h4>
+                </div>
+                <div class="card-body">
+                    <h5>Student: {{ submission.student.username }}</h5>
+                    <p><strong>Submitted:</strong> {{ submission.submitted_at|timesince }} ago</p>
+                    
+                    {% if submission.submitted_at > submission.assignment.due_date %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-clock"></i> This submission is late!
+                        </div>
+                    {% endif %}
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Grade
+                            </button>
+                            <a href="{% url 'assignment_detail' submission.assignment.id %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Student Submission</h5>
+                </div>
+                <div class="card-body">
+                    {% if submission.submission_file %}
+                        <p>
+                            <strong>Submitted File:</strong><br>
+                            <a href="{{ submission.submission_file.url }}" target="_blank" class="btn btn-outline-primary">
+                                <i class="fas fa-download"></i> Download Submission File
+                            </a>
+                        </p>
+                    {% endif %}
+                    
+                    {% if submission.submission_text %}
+                        <strong>Student's Answer:</strong>
+                        <div class="border p-3 bg-light mt-2">
+                            {{ submission.submission_text|linebreaks }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

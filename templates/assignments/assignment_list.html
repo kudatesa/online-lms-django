@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Assignments - {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'course_detail' course.id %}">{{ course.title }}</a></li>
+            <li class="breadcrumb-item active">Assignments</li>
+        </ol>
+    </nav>
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-tasks"></i> Assignments - {{ course.title }}</h1>
+        
+        {% if user == course.teacher or user.profile.user_type == 'admin' %}
+            <a href="{% url 'create_assignment' course.id %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create Assignment
+            </a>
+        {% endif %}
+    </div>
+    
+    <div class="row">
+        {% for assignment in assignments %}
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 
+                    {% if now > assignment.due_date %}border-danger{% endif %}">
+                    <div class="card-header 
+                        {% if now > assignment.due_date %}bg-danger text-white{% else %}bg-primary text-white{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">{{ assignment.title }}</h5>
+                            <span class="badge bg-light text-dark">{{ assignment.total_points }} points</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">{{ assignment.description|truncatewords:30 }}</p>
+                        
+                        <div class="mb-3">
+                            <small class="text-muted">
+                                <i class="far fa-calendar"></i> 
+                                Due: {{ assignment.due_date|date:"F d, Y H:i" }}
+                                {% if now > assignment.due_date %}
+                                    <span class="badge bg-danger ms-2">Past Due</span>
+                                {% endif %}
+                            </small>
+                        </div>
+                        
+                        {% if user.profile.user_type == 'teacher' or user.profile.user_type == 'admin' %}
+                            <div class="mb-3">
+                                <small>
+                                    <i class="fas fa-users"></i> 
+                                    Submissions: {{ assignment.submissions.count }}/{{ course.students.count }}
+                                    ({{ assignment.submissions.filter.grade__isnull.count }} pending grading)
+                                </small>
+                            </div>
+                        {% endif %}
+                        
+                        <a href="{% url 'assignment_detail' assignment.id %}" class="btn btn-primary btn-sm">
+                            View Details <i class="fas fa-arrow-right"></i>
+                        </a>
+                        
+                        {% if user == course.teacher or user.profile.user_type == 'admin' %}
+                            <div class="btn-group float-end">
+                                <a href="{% url 'edit_assignment' assignment.id %}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'assignment_statistics' assignment.id %}" class="btn btn-sm btn-outline-info">
+                                    <i class="fas fa-chart-bar"></i>
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> 
+                    No assignments created for this course yet.
+                    {% if user == course.teacher %}
+                        <a href="{% url 'create_assignment' course.id %}" class="alert-link">Create one now</a>.
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

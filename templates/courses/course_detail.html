@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Course Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h1>{{ course.title }}</h1>
+                            <h5 class="text-muted">{{ course.code }}</h5>
+                            <p class="mt-3">{{ course.description }}</p>
+                            <p class="text-muted">
+                                <i class="fas fa-user"></i> Teacher: {{ course.teacher.username }}<br>
+                                <i class="fas fa-calendar"></i> Created: {{ course.created_at|date:"F d, Y" }}
+                            </p>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div>
+                            {% if user == course.teacher or user.profile.user_type == 'admin' %}
+                                <a href="{% url 'create_lesson' course.id %}" class="btn btn-success">
+                                    <i class="fas fa-plus"></i> Add Lesson
+                                </a>
+                                <a href="{% url 'create_assignment' course.id %}" class="btn btn-warning">
+                                    <i class="fas fa-tasks"></i> Add Assignment
+                                </a>
+                            {% endif %}
+                            
+                            {% if user.profile.user_type == 'student' and not is_enrolled %}
+                                <a href="{% url 'enroll_course' course.id %}" class="btn btn-primary">
+                                    <i class="fas fa-sign-in-alt"></i> Enroll in Course
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Left Column - Lessons -->
+        <div class="col-md-8">
+            <!-- Announcements Section -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-bullhorn"></i> Announcements</h5>
+                </div>
+                <div class="card-body">
+                    {% if announcements %}
+                        {% for announcement in announcements %}
+                            <div class="alert alert-info">
+                                <h6>{{ announcement.title }}</h6>
+                                <p>{{ announcement.content }}</p>
+                                <small class="text-muted">
+                                    Posted by {{ announcement.teacher.username }} on {{ announcement.created_at|date:"M d, Y" }}
+                                </small>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No announcements yet.</p>
+                    {% endif %}
+                    
+                    {% if user == course.teacher or user.profile.user_type == 'admin' %}
+                        <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#announcementModal">
+                            <i class="fas fa-plus"></i> Add Announcement
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Lessons Section -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-book-open"></i> Course Lessons</h5>
+                </div>
+                <div class="card-body">
+                    {% if lessons %}
+                        <div class="accordion" id="lessonsAccordion">
+                            {% for lesson in lessons %}
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="heading{{ lesson.id }}">
+                                        <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ lesson.id }}">
+                                            {{ lesson.title }}
+                                            <small class="text-muted ms-2">({{ lesson.created_at|date:"M d, Y" }})</small>
+                                        </button>
+                                    </h2>
+                                    <div id="collapse{{ lesson.id }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" data-bs-parent="#lessonsAccordion">
+                                        <div class="accordion-body">
+                                            <div class="lesson-content">
+                                                {{ lesson.content|linebreaks }}
+                                            </div>
+                                            
+                                            {% if lesson.notes_file %}
+                                                <div class="mt-3">
+                                                    <a href="{{ lesson.notes_file.url }}" class="btn btn-sm btn-primary" download>
+                                                        <i class="fas fa-download"></i> Download Notes
+                                                    </a>
+                                                </div>
+                                            {% endif %}
+                                            
+                                            {% if lesson.video_url %}
+                                                <div class="mt-3">
+                                                    <a href="{{ lesson.video_url }}" target="_blank" class="btn btn-sm btn-info">
+                                                        <i class="fas fa-video"></i> Watch Video
+                                                    </a>
+                                                </div>
+                                            {% endif %}
+                                            
+                                            <!-- Comments Section -->
+                                            <div class="mt-4">
+                                                <h6><i class="fas fa-comments"></i> Comments</h6>
+                                                {% for comment in lesson.comments.all %}
+                                                    <div class="ms-3 mb-2">
+                                                        <strong>{{ comment.user.username }}</strong>
+                                                        <small class="text-muted">{{ comment.created_at|timesince }} ago</small>
+                                                        <p>{{ comment.content }}</p>
+                                                        
+                                                        <!-- Replies -->
+                                                        {% for reply in comment.replies.all %}
+                                                            <div class="ms-4 mt-2">
+                                                                <strong>{{ reply.user.username }}</strong>
+                                                                <small class="text-muted">{{ reply.created_at|timesince }} ago</small>
+                                                                <p>{{ reply.content }}</p>
+                                                            </div>
+                                                        {% endfor %}
+                                                        
+                                                        <!-- Reply Form -->
+                                                        {% if user.is_authenticated %}
+                                                            <form method="post" action="{% url 'add_comment' lesson.id %}" class="mt-2">
+                                                                {% csrf_token %}
+                                                                <input type="hidden" name="parent_id" value="{{ comment.id }}">
+                                                                <div class="input-group input-group-sm">
+                                                                    <input type="text" name="content" class="form-control" placeholder="Write a reply...">
+                                                                    <button type="submit" class="btn btn-outline-primary">Reply</button>
+                                                                </div>
+                                                            </form>
+                                                        {% endif %}
+                                                    </div>
+                                                {% empty %}
+                                                    <p class="text-muted">No comments yet.</p>
+                                                {% endfor %}
+                                                
+                                                <!-- Add Comment -->
+                                                {% if user.is_authenticated %}
+                                                    <form method="post" action="{% url 'add_comment' lesson.id %}" class="mt-3">
+                                                        {% csrf_token %}
+                                                        <div class="input-group">
+                                                            <input type="text" name="content" class="form-control" placeholder="Add a comment...">
+                                                            <button type="submit" class="btn btn-primary">Comment</button>
+                                                        </div>
+                                                    </form>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No lessons available for this course yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Column - Assignments -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="fas fa-tasks"></i> Assignments</h5>
+                </div>
+                <div class="card-body">
+                    {% if course.assignments.all %}
+                        {% for assignment in course.assignments.all %}
+                            <div class="card mb-2">
+                                <div class="card-body">
+                                    <h6>{{ assignment.title }}</h6>
+                                    <p class="small">{{ assignment.description|truncatewords:20 }}</p>
+                                    <p class="small text-muted">
+                                        <i class="far fa-calendar"></i> Due: {{ assignment.due_date|date:"M d, Y H:i" }}<br>
+                                        <i class="fas fa-star"></i> Points: {{ assignment.total_points }}
+                                    </p>
+                                    <a href="{% url 'assignment_detail' assignment.id %}" class="btn btn-sm btn-primary">
+                                        View Assignment
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No assignments yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Announcement Modal -->
+<div class="modal fade" id="announcementModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Announcement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'create_announcement' course.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Content</label>
+                        <textarea class="form-control" id="content" name="content" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Post Announcement</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

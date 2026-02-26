@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Welcome, {{ user.username }}!</h1>
+    
+    <div class="row">
+        <!-- Enrolled Courses -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-book-open"></i> My Courses</h5>
+                </div>
+                <div class="card-body">
+                   {% if not enrolled_courses %}
+    <p class="text-muted">You are not enrolled in any courses yet.</p>
+    <a href="{% url 'course_list' %}" class="btn btn-primary">
+        <i class="fas fa-search"></i> Browse Available Courses
+    </a>
+{% else %}
+    <!-- Show enrolled courses -->
+    <div class="row">
+        {% for course in enrolled_courses %}
+            <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ course.title }}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">{{ course.code }}</h6>
+                        <p class="card-text">{{ course.description|truncatewords:20 }}</p>
+                        <p class="text-muted small">
+                            <i class="fas fa-user"></i> Teacher: {{ course.teacher.username }}
+                        </p>
+                        <a href="{% url 'course_detail' course.id %}" class="btn btn-primary btn-sm">
+                            Go to Course <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+                  <!-- Add "Browse More Courses" button -->
+    <div class="text-center mt-3">
+        <a href="{% url 'course_list' %}" class="btn btn-outline-primary">
+            <i class="fas fa-search"></i> Browse More Courses
+        </a>
+    </div>
+{% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Upcoming Assignments -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="fas fa-tasks"></i> Upcoming Assignments</h5>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_assignments %}
+                        <ul class="list-group list-group-flush">
+                            {% for assignment in upcoming_assignments %}
+                                <li class="list-group-item">
+                                    <strong>{{ assignment.title }}</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="far fa-calendar"></i> Due: {{ assignment.due_date|date:"M d, Y H:i" }}
+                                    </small>
+                                    <br>
+                                    <a href="{% url 'assignment_detail' assignment.id %}" class="btn btn-sm btn-outline-primary mt-2">
+                                        View Assignment
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">No upcoming assignments.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Recent Submissions -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-check-circle"></i> Recent Submissions</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_submissions %}
+                        <ul class="list-group list-group-flush">
+                            {% for submission in recent_submissions %}
+                                <li class="list-group-item">
+                                    <strong>{{ submission.assignment.title }}</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="far fa-clock"></i> {{ submission.submitted_at|timesince }} ago
+                                    </small>
+                                    <br>
+                                    <span class="badge {% if submission.grade %}bg-success{% else %}bg-warning{% endif %}">
+                                        {% if submission.grade %}
+                                            Grade: {{ submission.grade }}/{{ submission.assignment.total_points }}
+                                        {% else %}
+                                            Not graded yet
+                                        {% endif %}
+                                    </span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">No submissions yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

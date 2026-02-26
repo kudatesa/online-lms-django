@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Parent Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Parent Dashboard</h1>
+    
+    {% if no_student %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> No student is linked to your account yet. 
+            Please contact the school administrator to link your child's account.
+        </div>
+    {% else %}
+        <div class="row">
+            <!-- Student Info -->
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-user-graduate"></i> Student Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <h4>{{ student.username }}</h4>
+                        <p><strong>Email:</strong> {{ student.email }}</p>
+                        <p><strong>Courses Enrolled:</strong> {{ student_courses.count }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Grades -->
+            <div class="col-md-8 mb-4">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-chart-line"></i> Recent Grades</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if recent_grades %}
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Assignment</th>
+                                        <th>Course</th>
+                                        <th>Grade</th>
+                                        <th>Submitted</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for grade in recent_grades %}
+                                    <tr>
+                                        <td>{{ grade.assignment.title }}</td>
+                                        <td>{{ grade.assignment.course.code }}</td>
+                                        <td>
+                                            <span class="badge bg-success">{{ grade.grade }}/{{ grade.assignment.total_points }}</span>
+                                        </td>
+                                        <td>{{ grade.submitted_at|date:"M d, Y" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <p class="text-muted">No grades available yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Student's Courses -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-book"></i> Student's Courses</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if student_courses %}
+                            <div class="row">
+                                {% for course in student_courses %}
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <h5 class="card-title">{{ course.title }}</h5>
+                                                <h6 class="card-subtitle mb-2 text-muted">{{ course.code }}</h6>
+                                                <p class="card-text">{{ course.description|truncatewords:15 }}</p>
+                                                <p class="text-muted small">
+                                                    <i class="fas fa-user"></i> Teacher: {{ course.teacher.username }}
+                                                </p>
+                                                <a href="{% url 'course_detail' course.id %}" class="btn btn-primary btn-sm">
+                                                    View Course
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted">Student is not enrolled in any courses.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %}Teacher Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Teacher Dashboard - {{ user.username }}</h1>
+    
+    <div class="row">
+        <!-- My Courses -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chalkboard-teacher"></i> My Courses</h5>
+                </div>
+                <div class="card-body">
+                    {% if courses %}
+                        <div class="row">
+                            {% for course in courses %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ course.title }}</h5>
+                                            <h6 class="card-subtitle mb-2 text-muted">{{ course.code }}</h6>
+                                            <p class="card-text">{{ course.description|truncatewords:20 }}</p>
+                                            <p class="text-muted small">
+                                                <i class="fas fa-users"></i> Students: {{ course.students.count }}
+                                            </p>
+                                            <a href="{% url 'course_detail' course.id %}" class="btn btn-primary btn-sm">
+                                                Manage Course
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">You haven't created any courses yet.</p>
+                    {% endif %}
+                    <a href="{% url 'create_course' %}" class="btn btn-success mt-2">
+                        <i class="fas fa-plus"></i> Create New Course
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pending Submissions -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="fas fa-clock"></i> Pending Grading</h5>
+                </div>
+                <div class="card-body">
+                    {% if pending_submissions %}
+                        <div class="list-group">
+                            {% for submission in pending_submissions %}
+                                <a href="{% url 'grade_submission' submission.id %}" class="list-group-item list-group-item-action">
+                                    <strong>{{ submission.student.username }}</strong>
+                                    <br>
+                                    <small>{{ submission.assignment.title }}</small>
+                                    <br>
+                                    <small class="text-muted">
+                                        Submitted: {{ submission.submitted_at|timesince }} ago
+                                    </small>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No pending submissions to grade.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-4">
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-chart-line"></i> Assignment Overview</h5>
+        </div>
+        <div class="card-body">
+            {% if courses %}
+                <div class="accordion" id="assignmentAccordion">
+                    {% for course in courses %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ course.id }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ course.id }}">
+                                    {{ course.code }} - {{ course.title }}
+                                </button>
+                            </h2>
+                            <div id="collapse{{ course.id }}" class="accordion-collapse collapse" data-bs-parent="#assignmentAccordion">
+                                <div class="accordion-body">
+                                    {% with assignments=course.assignments.all %}
+                                        {% if assignments %}
+                                            <ul class="list-unstyled">
+                                                {% for assignment in assignments %}
+                                                    <li class="mb-2">
+                                                        <div class="d-flex justify-content-between">
+                                                            <small>
+                                                                <strong>{{ assignment.title }}</strong><br>
+                                                                <span class="text-muted">
+                                                                    Due: {{ assignment.due_date|date:"M d" }}
+                                                                </span>
+                                                            </small>
+                                                            <span class="badge bg-primary">
+                                                                {{ assignment.submissions.count }} submissions
+                                                            </span>
+                                                        </div>
+                                                        <div class="progress mt-1" style="height: 5px;">
+                                                            {% with graded=assignment.submissions.filter.grade__isnull.count %}
+                                                                {% with total=assignment.submissions.count %}
+                                                                    {% if total > 0 %}
+                                                                        <div class="progress-bar bg-success" style="width: {{ graded|floatformat:0 }}%"></div>
+                                                                    {% endif %}
+                                                                {% endwith %}
+                                                            {% endwith %}
+                                                        </div>
+                                                        <a href="{% url 'assignment_list' course.id %}" class="btn btn-sm btn-outline-primary mt-2 w-100">
+                                                            Manage Assignments
+                                                        </a>
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            <p class="text-muted small">No assignments yet</p>
+                                            <a href="{% url 'create_assignment' course.id %}" class="btn btn-sm btn-success w-100">
+                                                Create Assignment
+                                            </a>
+                                        {% endif %}
+                                    {% endwith %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">No courses available.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Courses - Gifts Academy{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-book"></i> Courses</h1>
+        {% if user.profile.user_type == 'admin' or user.profile.user_type == 'teacher' %}
+            <a href="{% url 'create_course' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create New Course
+            </a>
+        {% endif %}
+    </div>
+    
+    {% if user.profile.user_type == 'student' %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> 
+            Browse available courses below. Click "Enroll" to join a course.
+        </div>
+    {% endif %}
+    
+    <div class="row">
+        {% for course in courses %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ course.title }}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">{{ course.code }}</h6>
+                        <p class="card-text">{{ course.description|truncatewords:20 }}</p>
+                        <p class="text-muted small">
+                            <i class="fas fa-user"></i> Teacher: {{ course.teacher.username }}<br>
+                            <i class="fas fa-users"></i> Students: {{ course.students.count }}
+                        </p>
+                        
+                        {% if user.profile.user_type == 'student' %}
+                            {% if user in course.students.all %}
+                                <span class="badge bg-success mb-2">Already Enrolled</span>
+                                <a href="{% url 'course_detail' course.id %}" class="btn btn-primary btn-sm w-100">
+                                    Go to Course <i class="fas fa-arrow-right"></i>
+                                </a>
+                            {% else %}
+                                <a href="{% url 'enroll_course' course.id %}" class="btn btn-success btn-sm w-100">
+                                    <i class="fas fa-sign-in-alt"></i> Enroll Now
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'course_detail' course.id %}" class="btn btn-primary btn-sm w-100">
+                                View Course <i class="fas fa-arrow-right"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    No courses available yet.
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
