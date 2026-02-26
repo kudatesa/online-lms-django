@@ -7,7 +7,7 @@ SECRET_KEY = 'django-insecure-your-secret-key-here'
 
 DEBUG = False
 
-ALLOWED_HOSTS = ['https://online-lms-ylxs.onrender.com']
+ALLOWED_HOSTS = ['https://online-lms-django-1.onrender.com']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -101,4 +101,3 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
 
-ALLOWED_HOSTS = ['online-lms.onrender.com']
