@@ -1,0 +1,1 @@
+# Online Learning Management System  Developed using Django and SQLite.  ## Features  - User authentication  - Course management  - Assignment submission  - Admin dashboard  - Teacher dashboard  - Student dashboard 
