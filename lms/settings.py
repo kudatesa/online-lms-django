@@ -7,7 +7,7 @@ SECRET_KEY = 'django-insecure-your-secret-key-here'
 
 DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['https://online-lms-ylxs.onrender.com']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
